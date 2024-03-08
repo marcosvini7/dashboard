@@ -7,13 +7,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <div class="mb-2" v-if="$route.name == 'contratos'">
-                <label class="form-label" for="input-tipo-investidor">Tipo investidor</label>
-                <select class="form-select" id="input-tipo-investidor" v-model="input.tipoInvestidor">
-                    <option :value="tipo" v-for="tipo, i in tiposInvestidores" :key="i" > {{ tipo }} </option>
-                </select>
-            </div>   
-
             <div class="mb-2">
                 <div class="form-label">Opções de Visão geral</div>
                 <div class="checkbox-area-contratos border mb-1">
@@ -24,11 +17,37 @@
                         </div>
                     </div>  
                 </div>
-                <small class="text-muted">{{ selecionados }}</small>
+                <div class="descr-marcados-checkbox">
+                    <small class="text-muted">{{ selecionados }}</small>
+                </div>
             </div>
-        </div>
+
+            <div class="mb-2">
+                <label class="form-label" for="input-calculo">Cálculo do gráfico secundário</label>
+                <select class="form-select" id="input-calculo" v-model="input.calculo">
+                    <option value="data">Total por data</option>
+                    <option value="tipo">Total por investidor/contrato</option>
+                </select>
+            </div> 
+
+            <div class="mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" v-model="input.graficoEmpilhado">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Gráfico com barras empilhadas</label>
+                </div>
+            </div> 
+
+            <div class="mb-2" v-if="$route.name == 'contratos'">
+                <label class="form-label" for="input-tipo-investidor">Tipo investidor</label>
+                <select class="form-select" id="input-tipo-investidor" v-model="input.tipoInvestidor">
+                    <option :value="tipo" v-for="tipo, i in tiposInvestidores" :key="i" > {{ tipo }} </option>
+                </select>
+            </div>
+          
+        </div>      
+
         <div class="modal-footer">
-            <button @click="confirmar" type="button" class="btn btn-primary" data-bs-dismiss="modal">Savar</button>
+            <button @click="salvar" type="button" class="btn btn-primary" data-bs-dismiss="modal">Savar</button>
         </div>
         </div>
     </div>
@@ -36,14 +55,24 @@
 </template>
 
 <style>
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
 .checkbox-area-contratos {
-    max-height: 200px;
-    overflow-y: scroll;
+    max-height: 170px;
+    overflow-y: auto;
     overflow-x: hidden;
     padding: 5px;
+    font-size: 0.9em;
 }
 .checkbox {
     margin-right: 2px;
+}
+.descr-marcados-checkbox {
+    max-width: 100%;
+    overflow-x: auto;
+    text-wrap: nowrap;
 }
 </style>
 
@@ -68,8 +97,10 @@ import { mapState, mapMutations } from 'vuex'
                 'Total Geral'
             ],
             input: {
-                tipoInvestidor: ''
-            },
+                tipoInvestidor: 'Total Geral',
+                calculo: 'data',
+                graficoEmpilhado: false
+            }, 
             marcados: []
         }),
         computed: {
@@ -82,16 +113,30 @@ import { mapState, mapMutations } from 'vuex'
             },
             selecionados(){
                 let qtd = this.marcados.length
-                if(qtd) return qtd + ' opções selecionadas'
+                if(qtd){
+                    let marcados = ''
+                    this.marcados.forEach((d, i) => { 
+                        if(i == 0) marcados += d
+                        else marcados += ', ' + d
+                    })
+                    
+                    if(qtd == 1) 
+                        return qtd + ' opção selecionada: ' + marcados
+                    else
+                        return qtd + ' opções selecionadas: ' + marcados
+                }
+
                 return ''
             }           
         },
         methods: {
-            ...mapMutations(['setVisaoGeral']),
-            confirmar(){
+            ...mapMutations(['setVisaoGeral', 'setCalculoGraficoSecundario', 'setGraficoEmpilhado']),
+            salvar(){
                 let obj = 'contratos'
                 if(this.$route.name != 'contratos') obj = 'participacaoInvestidores'
                 this.setVisaoGeral({obj: obj, data: [...this.marcados]})
+                this.setCalculoGraficoSecundario(this.input.calculo)
+                this.setGraficoEmpilhado(this.input.graficoEmpilhado)
 
                 this.$router.push({
                     name: this.$route.name,

@@ -49,7 +49,10 @@ export default createStore({
     atualizarGrafico: false,
     ocultarGrafico: false,
     ocultarIcoGrafico: false, 
-    atualizarModal: false  
+    atualizarModal: false ,
+    calculoGraficoSecundario: 'data',
+    graficoPadrao: true,
+    graficoEmpilhado: false
   },
   getters: {
   },
@@ -92,6 +95,15 @@ export default createStore({
     },
     setAtualizarModal(state){
       state.atualizarModal = !state.atualizarModal
+    },
+    setCalculoGraficoSecundario(state, p){
+      state.calculoGraficoSecundario = p
+    },
+    setGraficoPadrao(state, p){
+      state.graficoPadrao = p
+    },
+    setGraficoEmpilhado(state, p){
+      state.graficoEmpilhado = p
     }
   },
   actions: {

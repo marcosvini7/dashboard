@@ -5,22 +5,32 @@ export default {
         
     }),
     computed: {
-        ...mapState(['dados', 'request']),   
+        ...mapState(['dados', 'request', 'visaoGeral']),   
         API_URL(){
             return process.env.VUE_APP_API_URL
         }   
     },
     methods: {
         ...mapMutations(['setDados', 'setRequest', 'setNavLateral']),
-        getContratos(){           
+        queryNome(){
             let opcao = this.$route.query.opcao ? this.$route.query.opcao : '' 
-            if(opcao){
-                this.setRequest(true)    
-                axios.get(this.API_URL + 'contratos?nome=' + opcao).then(res => {
-                    this.setDados({obj: 'contratos', data: res.data})
-                    this.setRequest(false)
-                })
+            if(!opcao){         
+                let aux = this.visaoGeral.contratos
+                for(let i = 0; i < aux.length; i++){
+                    if(i == 0) opcao += aux[i]
+                    else opcao += ',' + aux[i]
+                }
+                
             }
+            return opcao
+        },
+
+        getContratos(){           
+            this.setRequest(true)    
+            axios.get(this.API_URL + 'contratos?nome=' + this.queryNome()).then(res => {
+                this.setDados({obj: 'contratos', data: res.data})
+                this.setRequest(false)
+            })
         },
         getDados(){
             this.setRequest(true) // Indica que a requisição iniciou
@@ -29,9 +39,8 @@ export default {
                 axios.get(this.API_URL + 'contratos/nomes'),
                 axios.get(this.API_URL + 'participacao-investidores')
             ]
-            if(this.$route.name == 'contratos') {
-                let opcao = this.$route.query.opcao ? this.$route.query.opcao : ''
-                if(opcao) requests.push(axios.get(this.API_URL + 'contratos?nome=' + opcao))
+            if(this.$route.name == 'contratos') {            
+                requests.push(axios.get(this.API_URL + 'contratos?nome=' + this.queryNome()))
             }
             // Quando todas as requisições terminarem seus resultados ficarão nas variáveis res[o], res[1] ...
             axios.all(requests).then(axios.spread((...res) => {
@@ -52,8 +61,7 @@ export default {
                 }
                 this.setRequest(false) // Indica que a requisição terminou
 
-            }))   
-            
+            }))            
         }
     }
 }

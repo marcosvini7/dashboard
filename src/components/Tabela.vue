@@ -4,15 +4,13 @@
             <caption>{{ descrDados }}</caption>
             <thead>
                 <tr>
-                    <th>{{ titulo }}</th>
-                    <th>{{ dadosVisualizacao[0][1] }}</th>
+                    <th v-for="(d, i) in dadosVisualizacao[0]" :key="i">{{ d }}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="(d, i) in dadosVisualizacao" :key="d.id">
                     <template v-if="i != 0">
-                        <td> {{ d[0] }} </td>
-                        <td> {{ d[1] }} </td>
+                        <td v-for="(d, j) in dadosVisualizacao[i]" :key="j"> {{ d.toLocaleString() }} </td>
                     </template>
                 </tr>
             </tbody>
@@ -26,7 +24,7 @@
         computed: {
             ...mapState(['dadosVisualizacao', 'qtdTotal', 'descrDados']),
             titulo(){
-                return this.$route.query.opcao ? 'Data' : 'Tipo'
+               
             }
         },
     }

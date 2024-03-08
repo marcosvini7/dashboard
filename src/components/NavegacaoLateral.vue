@@ -118,7 +118,8 @@ import requestMixin from '../mixins/request'
         },
         watch: {
             $route(to, from){
-                if(to.name == 'contratos' && to.query.opcao != from.query.opcao) {
+                if((to.name == 'contratos' && (to.query.opcao != from.query.opcao)) || 
+                (to.name == 'contratos' && from.name != 'contratos')){
                     this.getContratos()
                 }
             }

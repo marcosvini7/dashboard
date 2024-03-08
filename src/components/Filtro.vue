@@ -17,17 +17,17 @@
         </select>
     </div> 
 
-    <div class="col-5 col-lg-3" v-if="$route.query.opcao">
+    <div class="col-5 col-lg-3" v-if="rangeData">
         <label for="input-data-inicio" class="form-label">Data início</label>
         <input id="input-data-inicio" type="date" v-model="input.data_inicio" class="form-control">
     </div>
 
-    <div class="col-5 col-lg-3" v-if="$route.query.opcao">
+    <div class="col-5 col-lg-3" v-if="rangeData">
         <label for="input-data-fim" class="form-label">Data fim</label>
         <input id="input-data-fim" type="date" v-model="input.data_fim" class="form-control">
     </div>
 
-    <div class="col-5 col-lg-3 mb-2 mb-lg-0" v-if="!$route.query.opcao">
+    <div class="col-5 col-lg-3 mb-2 mb-lg-0" v-if="!rangeData">
         <label for="input-data" class="form-label">Data</label>
         <input id="input-data" type="date" v-model="input.data" class="form-control">
     </div>    
@@ -64,7 +64,9 @@
 
 <script>
     import { mapState, mapMutations } from 'vuex'
+    import requestMixin from '../mixins/request'
     export default {
+        mixins: [requestMixin],
         data: () => ({
             input: {              
                 data_inicio: '',
@@ -72,10 +74,10 @@
                 data: '',
                 tipo: '',
                 visualizacao: ''                         
-            }
+            },
         }),
         computed: {
-            ...mapState(['dados', 'request', 'visaoGeral']),
+            ...mapState(['dados', 'request', 'visaoGeral', 'graficoPadrao', 'graficoEmpilhado']),
             tipos(){
                 if(this.$route.name == 'participacao-investidores'){
                     return [
@@ -91,20 +93,25 @@
                         {obj: 'compra', label: 'Compra', unidade: 'Quantidade'},
                         {obj: 'venda', label: 'Venda', unidade: 'Quantidade'},
                         {obj: 'compra_porcentagem', label: 'Compra %', unidade: '%'},
-                        {obj: 'venda_porcentagem', label: 'Venda %', unidade: '%'},
-                        
+                        {obj: 'venda_porcentagem', label: 'Venda %', unidade: '%'},                      
                     ]
                 }
+            },
+            rangeData(){
+                return !this.graficoPadrao || this.$route.query.opcao 
             }
         },
         methods: {
             ...mapMutations(['setDadosVisualizacao', 'setAttGrafico', 'setOcultarGrafico', 'setTipoGrafico',
-                'setTituloGrafico', 'setDescrDados', 'setOcultarIcoGrafico', 'setAtualizarModal']),
+                'setTituloGrafico', 'setDescrDados', 'setOcultarIcoGrafico', 'setAtualizarModal',
+                'setGraficoPadrao'
+            ]),
             clicouBotao(){
                 this.$router.push({              
                     name: this.$route.name,
                     query: {
                         opcao: this.$route.query.opcao ? this.$route.query.opcao : '',
+                        tipo_investidor: this.$route.query.tipo_investidor ? this.$route.query.tipo_investidor : '',
                         ...this.input,
                     }
                 })
@@ -114,14 +121,14 @@
                 if(rota == 'participacao-investidores' || (rota == 'contratos' && this.dados.contratos.length)){
 
                     let data_inicio = this.$route.query.data_inicio ? this.$route.query.data_inicio : 
-                        this.moment().subtract(7, 'days').format('YYYY-MM-DD')
+                        this.moment().subtract(10, 'days').format('YYYY-MM-DD')
                     let data_fim = this.$route.query.data_fim ? this.$route.query.data_fim : 
                         this.moment().format('YYYY-MM-DD')
                     let tipo = this.$route.query.tipo ? this.$route.query.tipo : this.tipos[0].obj
                     this.tipos.forEach(t => { if(t.obj == tipo) tipo = t })
                     let tipo_investidor = this.$route.query.tipo_investidor ? this.$route.query.tipo_investidor : 'Total Geral'
                     let visualizacao = this.$route.query.visualizacao ? this.$route.query.visualizacao : 'BarChart'
-
+                    
                     let dados = this.dados.participacaoInvestidores
                     let objFiltro = 'tipo_investidor'
                     let objData = 'data'
@@ -137,47 +144,112 @@
                     let data = this.$route.query.data ? this.moment(this.$route.query.data) : 
                         this.moment(dados[dados.length - 1][objData])
                     let dadosFiltrados = []
-        
+
+                    let di = this.moment(data_inicio)
+                    let df = this.moment(data_fim)
+                    // let formatoData = this.moment(data_inicio).format('YYYY') == this.moment(data_fim).format('YYYY') ? 'DD/MM' : 'DD/MM/YYYY'
+                    let formatoData = 'DD/MM'
+
+                    let graficosNaoPadrao = ['LineChart', 'tabela']
+                    if(this.graficoEmpilhado){
+                        graficosNaoPadrao = ['LineChart', 'ColumnChart', 'tabela', 'BarChart']
+                    }
+
+                    this.setGraficoPadrao(!graficosNaoPadrao.includes(visualizacao) || opcao)
+
+                    function ajustarValor(valor){
+                        let tipos = ['compras', 'vendas', 'saldo']
+                        if(tipos.indexOf(tipo.obj) != -1 ){
+                            return valor / 1000
+                        }
+                        return valor
+                    }
+
                     if(opcao){
                         dados.forEach(d => {
-                            let di = this.moment(data_inicio)
-                            let df = this.moment(data_fim)
-                            let data = this.moment(d[objData])
+                            let dt = this.moment(d[objData])
 
-                            if(data.isSameOrAfter(di) && data.isSameOrBefore(df) && d[objFiltro] == opcao
+                            if(dt.isSameOrAfter(di) && dt.isSameOrBefore(df) && d[objFiltro] == opcao
                                 && ((rota == 'contratos' && d.tipo == tipo_investidor) 
                                 || rota == 'participacao-investidores')                    
                             ){
-                                let dt = this.moment(d[objData]).format('DD/MM')
-                                if(this.moment(data_inicio).format('YYYY') != this.moment(data_fim).format('YYYY'))
-                                    dt = this.moment(d[objData]).format('DD/MM/YYYY')
-                                dadosFiltrados.push([dt, d[tipo.obj]])
+                                let dt = this.moment(d[objData]).format(formatoData)
+                                dadosFiltrados.push([dt, ajustarValor(d[tipo.obj])])
                             }
                         })
+                    } else {                                                                                                             
+                        dados.forEach(d => {     
+                            let dt = this.moment(d[objData])
+
+                            if(((this.graficoPadrao && dt.isSame(data)) || (!this.graficoPadrao && 
+                                dt.isSameOrAfter(di) && dt.isSameOrBefore(df))) 
+                                && visaoGeral.includes(d[objFiltro])
+                                && ((rota == 'contratos' && d.tipo == tipo_investidor) 
+                                    || rota == 'participacao-investidores')
+                            ){ 
+                                if(this.graficoPadrao){
+                                    dadosFiltrados.push([d[objFiltro], ajustarValor(d[tipo.obj])])    
+
+                                } else {
+
+                                    dt = this.moment(d[objData]).format(formatoData)
+                                    let i = 0
+                                    let posicao = visaoGeral.indexOf(d[objFiltro]) + 1
+                                    let inseriu = false
+                                    let valor = ajustarValor(d[tipo.obj])
+
+                                    if(dadosFiltrados.length == 0){
+                                        dadosFiltrados.push(new Array(visaoGeral.length + 1).fill(''))
+                                    }
+
+                                    while(!inseriu){
+                                        if(dadosFiltrados[i][posicao] == ''){
+                                            dadosFiltrados[i][posicao] = valor
+                                            inseriu = true
+                                        } else {
+                                            i++
+                                        }
+                                        if(i == dadosFiltrados.length && !inseriu){
+                                            dadosFiltrados.push(new Array(visaoGeral.length + 1).fill(''))
+                                            dadosFiltrados[i][posicao] = valor
+                                            inseriu = true
+                                        }
+                                        if(dadosFiltrados[i][0] == '') dadosFiltrados[i][0] = dt
+                                    }                                                        
+                                }                    
+                            }
+                        })
+                    }                 
+
+                    let dadosValidos = dadosFiltrados.length > 0
+
+                    if(this.graficoPadrao){
+                        let titulo = rota == 'contratos' ? 'Contrato' : 'Investidor'
+                        if(opcao) titulo = 'Data';
+                        dadosFiltrados.unshift([titulo, tipo.unidade])
                     } else {
-
-                        dados.forEach(d => {
-                            let dt = this.moment(d[objData]) 
-                            if(data.isSame(dt) && visaoGeral.includes(d[objFiltro])) 
-                                dadosFiltrados.push([d[objFiltro], d[tipo.obj]])
-                        })
-                    }
-                
-                    if(rota == 'participacao-investidores' && ['compras', 'vendas', 'saldo'].indexOf(tipo.obj) != -1 ){
-                        let lista = []
+                        dadosFiltrados.unshift(['Data', ...visaoGeral])
                         dadosFiltrados.forEach(d => {
-                            let valor = d[1] / 1000
-                            lista.push([d[0], valor])
+                            d.forEach(j => { if(j == '') dadosValidos = false })
                         })
-                        dadosFiltrados = lista
                     }
 
-                    dadosFiltrados.unshift([tipo.label, tipo.unidade])
-                    this.setDadosVisualizacao(dadosFiltrados) 
+                    if(!dadosValidos){
+                        dadosFiltrados = [] 
+                    }
 
-                    if(visualizacao != 'tabela'){       
-                        this.setOcultarGrafico(false)                                               
-                        this.setTituloGrafico(tipo.label)                  
+                    this.setDadosVisualizacao(dadosFiltrados) 
+           
+                    let titulo = tipo.label
+                    if(['participacao_compras', 'participacao_vendas', 'compra', 'venda'].includes(tipo.obj)){
+                        titulo += ` (${tipo.unidade})`
+                    } else if(!['compra_porcentagem', 'venda_porcentagem'].includes(tipo.obj)){
+                        titulo += ` ${tipo.unidade}`                      
+                    } 
+
+                    if(visualizacao != 'tabela'){                                                     
+                        this.setOcultarGrafico(false)                                                                     
+                        this.setTituloGrafico(titulo)                  
                         this.setTipoGrafico(visualizacao)
                     } else {
                         this.setOcultarGrafico(true)
@@ -185,10 +257,13 @@
             
                     data_inicio = this.moment(data_inicio).format('DD/MM/YYYY')
                     data_fim = this.moment(data_fim).format('DD/MM/YYYY')
-                    let descr = 'Dados não encontrados para o perído informado'
-                    if(dadosFiltrados.length > 1){
-                        if(opcao) descr = `Exibindo ${tipo.label.toLowerCase()} entre ${data_inicio} e ${data_fim}`
-                        else descr = `Exibindo ${tipo.label.toLowerCase()} do dia ${data.format('DD/MM/YYYY')}`
+                    let descr = 'Dados não encontrados para a data informada'
+
+                    if(dadosValidos){                     
+                        if(opcao || !this.graficoPadrao) 
+                            descr = `${titulo} entre ${data_inicio} e ${data_fim}`
+                        else 
+                            descr = `${titulo} do dia ${data.format('DD/MM/YYYY')}`
                         this.setOcultarIcoGrafico(false) 
                     } else { 
                         this.setOcultarIcoGrafico(true)  
@@ -210,13 +285,18 @@
                if(!n) this.filtrar()
             },
             $route(to, from){
-                if(to.name != from.name){
+                if(to.name != from.name){         
+                    this.input.data_inicio = ''
+                    this.input.data_fim = ''
+                    this.input.data = ''
                     this.input.tipo = ''
+                    this.input.visualizacao = ''                         
+                    this.setGraficoPadrao(true)
                 }
                 this.filtrar()
             },
             'visaoGeral.participacaoInvestidores'(){ this.filtrar() },
-            'visaoGeral.contratos'(){ this.filtrar() }
+            'visaoGeral.contratos'(){ this.getContratos() }
         }
     }
 </script>

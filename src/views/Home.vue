@@ -2,7 +2,7 @@
 <navbar/>
 <modal/>
 
-<navegacao-lateral class="nav-lateral d-none d-lg-block" v-if="showNav && !showOffCanvas" />
+<navegacao-lateral class="nav-lateral d-none d-lg-block element" v-if="showNav && !showOffCanvas" />
 <offcanvas v-if="showOffCanvas"/>
 
 <div class="ico-show-nav-lateral d-none d-lg-block" v-if="!showNav" @click="ajustarNav()">
@@ -23,7 +23,7 @@
 <filtro class="filtro"/>
 
 <main class="area-conteudo">  
-    <div class="row" v-if="!request  && !ocultarGrafico">
+    <div class="row"  v-if="!request  && !ocultarGrafico">
       <div :class="classGraficoPrincipal" id="grafico-principal">
         <grafico></grafico>
       </div>       
@@ -63,8 +63,8 @@
     @media (min-width: 992px) {      
       :root {
         --nav-lateral-width: 20%;
-        --area-conteudo-left: 23%;
-        --area-conteudo-width: 76%;   
+        --area-conteudo-left: 21%;
+        --area-conteudo-width: 79%;   
         --area-conteudo-top: 150px;  
         --filtro-position: fixed; 
       }
@@ -97,7 +97,7 @@
 
     .btn-offcanvas {
       position: fixed;
-      top: 220px;
+      top: 230px;
       left: 1%;
       z-index: 2;
     }
@@ -107,14 +107,14 @@
     .ico-hide-nav-lateral {
       position: fixed;
       top: var(--navbar-mg-top);
-      left: calc(var(--nav-lateral-width) + 20px);
+      left: calc(var(--nav-lateral-width) + 10px);
       z-index: 2;
       cursor: pointer;
     }
     .ico-show-nav-lateral {        
       position: fixed;
       top: var(--navbar-mg-top);
-      left: 20px;
+      left: 10px;
       z-index: 2;
       cursor: pointer;
     }
@@ -134,13 +134,15 @@
     }
     .filtro {
       position: var(--filtro-position);
-      top: var(--navbar-mg-top);
-      left: var(--area-conteudo-left);
-      width: var(--area-conteudo-width);
+      top: calc(var(--navbar-mg-top) - 15px);
+      left: calc(var(--area-conteudo-left) + 20px);
+      width: calc(var(--area-conteudo-width) - 20px);
       z-index: 1;
       background-color: white;
       padding-bottom: 20px;
+      padding-top: 20px;
     }
+
 </style>
 
 <script>
@@ -172,13 +174,13 @@
           this.showOffCanvas = true
 
         } else if(!this.showNav){
-          document.documentElement.style.setProperty('--area-conteudo-width', '97%')
-          document.documentElement.style.setProperty('--area-conteudo-left', '3%')
+          document.documentElement.style.setProperty('--area-conteudo-width', '100%')
+          document.documentElement.style.setProperty('--area-conteudo-left', '0%')
           this.showOffCanvas = false
 
         } else {
-          document.documentElement.style.setProperty('--area-conteudo-width', '76%')
-          document.documentElement.style.setProperty('--area-conteudo-left', '23%')
+          document.documentElement.style.setProperty('--area-conteudo-width', '79%')
+          document.documentElement.style.setProperty('--area-conteudo-left', '21%')
           this.showOffCanvas = false
         }
         this.setAttGrafico()
@@ -203,11 +205,12 @@
 
     watch: {
       request(n){
-        if(!n) this.ajustarGrafico()
+        if(!n) 
+          this.ajustarGrafico()
       },
       graficoSecundario(){
         this.ajustarGrafico()
-      }
+      },
     }
   }   
 </script>

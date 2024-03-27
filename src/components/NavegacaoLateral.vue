@@ -116,13 +116,5 @@ import requestMixin from '../mixins/request'
             ajustarAltura()
             window.addEventListener('resize', ajustarAltura)
         },
-        watch: {
-            $route(to, from){
-                if((to.name == 'contratos' && (to.query.opcao != from.query.opcao)) || 
-                (to.name == 'contratos' && from.name != 'contratos')){
-                    this.getContratos()
-                }
-            }
-        }
     }
 </script>

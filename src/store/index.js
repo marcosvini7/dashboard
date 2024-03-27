@@ -52,7 +52,9 @@ export default createStore({
     atualizarModal: false ,
     calculoGraficoSecundario: 'data',
     graficoPadrao: true,
-    graficoEmpilhado: false
+    graficoEmpilhado: false,
+    grafico3D: false,
+    temValorNegativo: false
   },
   getters: {
   },
@@ -104,6 +106,12 @@ export default createStore({
     },
     setGraficoEmpilhado(state, p){
       state.graficoEmpilhado = p
+    },
+    setGrafico3D(state, p){
+      state.grafico3D = p
+    },
+    setTemValorNegativo(state, p){
+      state.temValorNegativo = p
     }
   },
   actions: {

@@ -1,5 +1,5 @@
 <template>
-    <div class="table-responsive mt-5 mt-lg-3 ms-1 mx-1 ms-lg-0 mx-lg-0">
+    <div class="table-responsive mt-5 mt-lg-3 ms-1 mx-1">
         <table class="table table-hover table-striped table-bordered">
             <caption>{{ descrDados }}</caption>
             <thead>

@@ -6,7 +6,7 @@
             <option value="BarChart">Gráfico de Barras</option>
             <option value="ColumnChart">Gráfico de Colunas</option>
             <option value="LineChart">Gráfico de Linhas</option>  
-            <option value="tabela">Tabela</option>         
+            <option value="Table">Gráfico de Tabela</option>         
         </select>
     </div>
 
@@ -119,11 +119,11 @@
             filtrar(){
                 let rota = this.$route.name
                 if(rota == 'participacao-investidores' || (rota == 'contratos' && this.dados.contratos.length)){
-
                     let data_inicio = this.$route.query.data_inicio ? this.$route.query.data_inicio : 
-                        this.moment().subtract(10, 'days').format('YYYY-MM-DD')
+                        this.moment().subtract(15, 'days').format('YYYY-MM-DD')
                     let data_fim = this.$route.query.data_fim ? this.$route.query.data_fim : 
                         this.moment().format('YYYY-MM-DD')
+                    
                     let tipo = this.$route.query.tipo ? this.$route.query.tipo : this.tipos[0].obj
                     this.tipos.forEach(t => { if(t.obj == tipo) tipo = t })
                     let tipo_investidor = this.$route.query.tipo_investidor ? this.$route.query.tipo_investidor : 'Total Geral'
@@ -133,11 +133,40 @@
                     let objFiltro = 'tipo_investidor'
                     let objData = 'data'
                     let visaoGeral = this.visaoGeral.participacaoInvestidores
+                    let titulo1 = ' por investidor'
                     if(rota == 'contratos'){ 
                         dados = this.dados.contratos
                         objFiltro = 'nome'
                         objData = 'data_atualizacao'
                         visaoGeral = this.visaoGeral.contratos
+                        titulo1 = ' por contrato'
+                    }
+
+                    if(rota == 'participacao-investidores'){
+                        let temDados = false
+                        let data_inicio_ = this.moment().startOf('month').format('YYYY-MM-DD')
+                        
+                        dados.forEach(d => {
+                            let di = this.moment(data_inicio_)
+                            let df = this.moment(data_fim)
+                            let dt = this.moment(d[objData])
+                            if(dt.isSameOrAfter(di) && dt.isSameOrBefore(df)){
+                                temDados = true
+                            }
+                        })    
+      
+                        if(temDados){
+                            if(!this.$route.query.data_inicio){
+                                data_inicio = this.moment(data_inicio_).format('YYYY-MM-DD')
+                            }
+                        } else {
+                            if(!this.$route.query.data_inicio){
+                                data_inicio = this.moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
+                            }
+                            if(!this.$route.query.data_fim){
+                                data_fim = this.moment().subtract(1, 'month').endOf('month').format('YYYY-MM-DD')
+                            }                   
+                        }                      
                     }
                     
                     let opcao = this.$route.query.opcao ? this.$route.query.opcao : ''
@@ -147,12 +176,12 @@
 
                     let di = this.moment(data_inicio)
                     let df = this.moment(data_fim)
-                    // let formatoData = this.moment(data_inicio).format('YYYY') == this.moment(data_fim).format('YYYY') ? 'DD/MM' : 'DD/MM/YYYY'
-                    let formatoData = 'DD/MM'
+                    let formatoData = this.moment(data_inicio).format('YYYY') == this.moment(data_fim).format('YYYY') ? 'DD/MM' : 'DD/MM/YYYY'
+                    // let formatoData = 'DD/MM'
 
-                    let graficosNaoPadrao = ['LineChart', 'tabela']
+                    let graficosNaoPadrao = ['LineChart', 'Table']
                     if(this.graficoEmpilhado){
-                        graficosNaoPadrao = ['LineChart', 'ColumnChart', 'tabela', 'BarChart']
+                        graficosNaoPadrao = ['LineChart', 'ColumnChart', 'Table', 'BarChart']
                     }
 
                     this.setGraficoPadrao(!graficosNaoPadrao.includes(visualizacao) || opcao)
@@ -174,6 +203,7 @@
                                 || rota == 'participacao-investidores')                    
                             ){
                                 let dt = this.moment(d[objData]).format(formatoData)
+                                if(visualizacao == 'Table'){ dt = new Date(d[objData])}
                                 dadosFiltrados.push([dt, ajustarValor(d[tipo.obj])])
                             }
                         })
@@ -193,6 +223,7 @@
                                 } else {
 
                                     dt = this.moment(d[objData]).format(formatoData)
+                                    if(visualizacao == 'Table'){ dt = new Date(d[objData])}
                                     let i = 0
                                     let posicao = visaoGeral.indexOf(d[objFiltro]) + 1
                                     let inseriu = false
@@ -247,10 +278,18 @@
                         titulo += ` ${tipo.unidade}`                      
                     } 
 
-                    if(visualizacao != 'tabela'){                                                     
+                    if(opcao){
+                        titulo += ' de ' + opcao  + ' por data'
+                    } else {
+                        titulo += titulo1
+                    }
+                   
+
+                    this.setTipoGrafico(visualizacao)
+
+                    if(visualizacao != 'Table'){                                                     
                         this.setOcultarGrafico(false)                                                                     
-                        this.setTituloGrafico(titulo)                  
-                        this.setTipoGrafico(visualizacao)
+                        this.setTituloGrafico(titulo)                                       
                     } else {
                         this.setOcultarGrafico(true)
                     }

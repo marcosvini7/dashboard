@@ -23,16 +23,13 @@
 <filtro class="filtro"/>
 
 <main class="area-conteudo">  
-    <div class="row"  v-if="!request  && !ocultarGrafico">
+    <div class="row"  v-if="!request">
       <div :class="classGraficoPrincipal" id="grafico-principal">
         <grafico></grafico>
       </div>       
-      <grafico class="col-12 col-md-5" v-if="graficoSecundario" tipo="PieChart"></grafico>
+      <grafico class="col-12 col-md-5" v-if="graficoSecundario && !ocultarGrafico" tipo="PieChart"></grafico>
       <caption class="text-center">{{ descrDados }}</caption>
-    </div>
-    <div v-else-if="ocultarGrafico">
-      <tabela/>
-    </div>     
+    </div>    
     <div class="d-flex justify-content-center" v-else>
         <img src="/imagens/Rolling-1s-100px.gif" class="mg-gif">
     </div>
@@ -46,10 +43,11 @@
       --nav-lateral-width: 0%;
       --area-conteudo-width: 100%;
       --area-conteudo-left: 0%;
-      --area-conteudo-top: 220px;
+      --area-conteudo-top: 260px;
       --navbar-mg-top: 70px;
       --brand-color: whitesmoke;
       --filtro-position: absolute;
+      --filtro-left: calc(var(--area-conteudo-left) + 1%);
     }
 
     @media (min-width: 576px) {
@@ -114,14 +112,14 @@
     .ico-show-nav-lateral {        
       position: fixed;
       top: var(--navbar-mg-top);
-      left: 10px;
+      left: 1%;
       z-index: 2;
       cursor: pointer;
     }
     .ico-hide-grafico { 
       position: fixed;
       top: calc(var(--area-conteudo-top) + 30px);
-      right: 7%;
+      right: 25px;
       z-index: 1;
       cursor: pointer;     
     }
@@ -135,12 +133,20 @@
     .filtro {
       position: var(--filtro-position);
       top: calc(var(--navbar-mg-top) - 15px);
-      left: calc(var(--area-conteudo-left) + 20px);
-      width: calc(var(--area-conteudo-width) - 20px);
+      left: var(--filtro-left);
+      width: var(--area-conteudo-width);
       z-index: 1;
       background-color: white;
       padding-bottom: 20px;
       padding-top: 20px;
+    }
+
+    #grafico-principal table td{
+      padding: 7px;
+    }
+
+    #grafico-principal table th{
+      padding: 7px;
     }
 
 </style>
@@ -159,28 +165,37 @@
     }),
     created(){
       this.getDados()
+
+      if(this.$route.query.visualizacao == 'Table'){
+        this.classGraficoPrincipal = 'col-12 col-md-12'
+      } else {
+        this.classGraficoPrincipal = 'col-12 col-md-7'
+      }
     },
     computed: {
-      ...mapState(['ocultarGrafico', 'ocultarIcoGrafico', 'descrDados', 'atualizarGrafico', 'request'])
+      ...mapState(['ocultarGrafico', 'ocultarIcoGrafico', 'descrDados', 'atualizarGrafico', 'request', 'temValorNegativo'])
     },
     methods: {
-      ...mapMutations(['setAttGrafico']),
+      ...mapMutations(['setAttGrafico', 'setOcultarGrafico']),
       ajustarNav(mudar = true){
         if(mudar) this.showNav = !this.showNav
 
         if(window.innerWidth < 992){
           document.documentElement.style.setProperty('--area-conteudo-width', '100%')
           document.documentElement.style.setProperty('--area-conteudo-left', '0%')
+          document.documentElement.style.setProperty('--filtro-left', '0%')
           this.showOffCanvas = true
 
         } else if(!this.showNav){
           document.documentElement.style.setProperty('--area-conteudo-width', '100%')
           document.documentElement.style.setProperty('--area-conteudo-left', '0%')
+          document.documentElement.style.setProperty('--filtro-left', '3%')
           this.showOffCanvas = false
 
         } else {
           document.documentElement.style.setProperty('--area-conteudo-width', '79%')
           document.documentElement.style.setProperty('--area-conteudo-left', '21%')
+          document.documentElement.style.setProperty('--filtro-left', 'calc(var(--area-conteudo-left) + 1%)')
           this.showOffCanvas = false
         }
         this.setAttGrafico()
@@ -196,8 +211,10 @@
           }
         }
         this.setAttGrafico()
-      }
+      },
+
     },
+
     mounted(){       
       window.addEventListener('resize', () => this.ajustarNav(false))
       this.ajustarNav(false)
@@ -205,12 +222,33 @@
 
     watch: {
       request(n){
-        if(!n) 
-          this.ajustarGrafico()
+        if(!n) this.ajustarGrafico()    
       },
       graficoSecundario(){
         this.ajustarGrafico()
+      },   
+      $route(to, from){
+          if((to.name == 'contratos' && (to.query.opcao != from.query.opcao)) || 
+          (to.name == 'contratos' && from.name != 'contratos')){
+              this.getContratos()
+          }
+
+          if(to.query.visualizacao == 'Table' || this.temValorNegativo){
+            this.classGraficoPrincipal = 'col-12 col-md-12'
+          } else if(this.graficoSecundario) {
+            this.classGraficoPrincipal = 'col-12 col-md-7'
+          }
+
       },
+      temValorNegativo(n){
+        if(n) {
+          this.classGraficoPrincipal = 'col-12 col-md-12'
+          this.setAttGrafico()
+        } else if(this.graficoSecundario){
+          this.classGraficoPrincipal = 'col-12 col-md-7'
+          this.setAttGrafico()
+        }
+      }
     }
   }   
 </script>

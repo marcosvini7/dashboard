@@ -22,19 +22,12 @@
                 </div>
             </div>
 
-            <div class="mb-2">
+            <div class="mb-2" v-if="!graficoPadrao">
                 <label class="form-label" for="input-calculo">Cálculo do gráfico secundário</label>
                 <select class="form-select" id="input-calculo" v-model="input.calculo">
                     <option value="data">Total por data</option>
                     <option value="tipo">Total por investidor/contrato</option>
                 </select>
-            </div> 
-
-            <div class="mb-2">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" v-model="input.graficoEmpilhado">
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Gráfico com barras empilhadas</label>
-                </div>
             </div> 
 
             <div class="mb-2" v-if="$route.name == 'contratos'">
@@ -43,7 +36,21 @@
                     <option :value="tipo" v-for="tipo, i in tiposInvestidores" :key="i" > {{ tipo }} </option>
                 </select>
             </div>
-          
+
+            <div class="mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" v-model="input.graficoEmpilhado">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Gráfico com barras empilhadas</label>
+                </div>
+            </div> 
+
+            <div class="mb-2">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault1" v-model="input.grafico3D">
+                    <label class="form-check-label" for="flexSwitchCheckDefault1">Gráfico de Pizza em 3D</label>
+                </div>
+            </div> 
+        
         </div>      
 
         <div class="modal-footer">
@@ -99,12 +106,13 @@ import { mapState, mapMutations } from 'vuex'
             input: {
                 tipoInvestidor: 'Total Geral',
                 calculo: 'data',
-                graficoEmpilhado: false
+                graficoEmpilhado: false,
+                grafico3D: false
             }, 
             marcados: []
         }),
         computed: {
-            ...mapState(['navLateral', 'visaoGeral', 'atualizarModal']),
+            ...mapState(['navLateral', 'visaoGeral', 'atualizarModal', 'graficoPadrao']),
             opcoes(){
                 if(this.$route.name == 'contratos') 
                     return this.navLateral.contratos
@@ -130,13 +138,14 @@ import { mapState, mapMutations } from 'vuex'
             }           
         },
         methods: {
-            ...mapMutations(['setVisaoGeral', 'setCalculoGraficoSecundario', 'setGraficoEmpilhado']),
+            ...mapMutations(['setVisaoGeral', 'setCalculoGraficoSecundario', 'setGraficoEmpilhado', 'setGrafico3D']),
             salvar(){
                 let obj = 'contratos'
                 if(this.$route.name != 'contratos') obj = 'participacaoInvestidores'
                 this.setVisaoGeral({obj: obj, data: [...this.marcados]})
                 this.setCalculoGraficoSecundario(this.input.calculo)
                 this.setGraficoEmpilhado(this.input.graficoEmpilhado)
+                this.setGrafico3D(this.input.grafico3D)
 
                 this.$router.push({
                     name: this.$route.name,

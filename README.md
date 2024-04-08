@@ -1,19 +1,4 @@
-# dashboard
-
-## Project setup
-```
-yarn install
-```
-
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
-
-### Compiles and minifies for production
-```
-yarn build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+## Instalação
+1.  Usando o prompt de comando, acesse a pasta do projeto e execute o comando (`npm install`)
+2.  Configure a url da api no arquivo ".env"  
+3.  Execute o comando (`npm run serve`) para iniciar a aplicação

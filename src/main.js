@@ -10,7 +10,6 @@ import NavegacaoLateral from './components/NavegacaoLateral'
 import Grafico from './components/Grafico'
 import OffCanvas from './components/OffCanvas'
 import Filtro from './components/Filtro'
-import Tabela from './components/Tabela'
 
 const app = createApp(App)
 app.config.globalProperties.moment = moment
@@ -21,7 +20,6 @@ app.component('navegacao-lateral', NavegacaoLateral)
 app.component('grafico', Grafico)
 app.component('offcanvas', OffCanvas)
 app.component('filtro', Filtro)
-app.component('tabela', Tabela)
 
 app.use(store)
 .use(router)

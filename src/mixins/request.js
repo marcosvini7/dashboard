@@ -7,7 +7,7 @@ export default {
     computed: {
         ...mapState(['dados', 'request', 'visaoGeral']),   
         API_URL(){
-            return process.env.VUE_APP_API_URL
+            return process.env.VUE_APP_API_URL || 'http://localhost:3000/'
         }   
     },
     methods: {

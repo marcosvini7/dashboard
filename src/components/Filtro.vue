@@ -173,7 +173,7 @@
                     let data = this.$route.query.data ? this.moment(this.$route.query.data) : 
                         this.moment(dados[dados.length - 1][objData])
                     let dadosFiltrados = []
-
+ 
                     let di = this.moment(data_inicio)
                     let df = this.moment(data_fim)
                     let formatoData = this.moment(data_inicio).format('YYYY') == this.moment(data_fim).format('YYYY') ? 'DD/MM' : 'DD/MM/YYYY'
@@ -184,7 +184,7 @@
                         graficosNaoPadrao = ['LineChart', 'ColumnChart', 'Table', 'BarChart']
                     }
 
-                    this.setGraficoPadrao(!graficosNaoPadrao.includes(visualizacao) || opcao)
+                    this.setGraficoPadrao(!graficosNaoPadrao.includes(visualizacao) || opcao != '')
 
                     function ajustarValor(valor){
                         let tipos = ['compras', 'vendas', 'saldo']
@@ -252,7 +252,7 @@
                         })
                     }                 
 
-                    let dadosValidos = dadosFiltrados.length > 0
+                    let dadosValidos = dadosFiltrados.length > 0 
 
                     if(this.graficoPadrao){
                         let titulo = rota == 'contratos' ? 'Contrato' : 'Investidor'
@@ -268,7 +268,7 @@
                     if(!dadosValidos){
                         dadosFiltrados = [] 
                     }
-
+  
                     this.setDadosVisualizacao(dadosFiltrados) 
            
                     let titulo = tipo.label

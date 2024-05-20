@@ -31,7 +31,8 @@ export default createStore({
   state: {
     dados: {
       contratos: [],
-      participacaoInvestidores: []
+      participacaoInvestidores: [],
+      pi_acumulados: []
     },
     dadosVisualizacao: [],
     navLateral: {
@@ -50,7 +51,7 @@ export default createStore({
     ocultarGrafico: false,
     ocultarIcoGrafico: false, 
     atualizarModal: false ,
-    calculoGraficoSecundario: 'data',
+    calculoGraficoSecundario: 'tipo',
     graficoPadrao: true,
     graficoEmpilhado: false,
     grafico3D: false,

@@ -18,6 +18,8 @@ import { mapState, mapMutations } from 'vuex'
         methods: {
             ...mapMutations(['setOcultarGrafico', 'setTemValorNegativo']),
             drawChart() {    
+                let tipo = this.$route.query.tipo ? this.$route.query.tipo : 'compras_periodo'
+                let pi = this.$route.name == 'participacao-investidores'
                 let tamanho = this.dadosVisualizacao.length
                 let temValorNegativo = false
                 let el = document.getElementById(this.graficoId)
@@ -28,6 +30,7 @@ import { mapState, mapMutations } from 'vuex'
                     let dados1 = [['', '']]
                     let dados2 = [['', '']]
                     
+                    // Cálculo do gráfico secundário para a opção "total por data"
                     let indice = 1
                     this.dadosVisualizacao.forEach((d, n) => {                  
                         if(n > 0){                      
@@ -41,19 +44,31 @@ import { mapState, mapMutations } from 'vuex'
                             dados1.push([d[0], valor])
                             indice += 1        
                         }                  
-                    })
+                    }) 
 
+                    // Cálculo do gráfico secundário para a opção "total por tipo de investidor/contrato"
                     indice = 1
-                    this.dadosVisualizacao[0].forEach((d, n) => {
-                        if(n > 0){
-                            let valor = 0
-                            for(let i = 1; i < tamanho; i++){
-                                valor += this.dadosVisualizacao[i][indice]
+                    if(pi && ['compras_periodo', 'vendas_periodo', 'saldo_periodo'].includes(tipo)){
+                        
+                        this.dadosVisualizacao[0].forEach((d, n) => {
+                            if(n > 0) {
+                                dados2.push([d, this.dadosVisualizacao[tamanho - 1][indice]])  
+                                indice++     
+                            }       
+                        })
+                    } 
+                    else {
+                        this.dadosVisualizacao[0].forEach((d, n) => {
+                            if(n > 0){
+                                let valor = 0
+                                for(let i = 1; i < tamanho; i++){
+                                    valor += this.dadosVisualizacao[i][indice]
+                                }
+                                dados2.push([d, valor])
+                                indice += 1
                             }
-                            dados2.push([d, valor])
-                            indice += 1
-                        }
-                    })
+                        })
+                    }
 
                     dados3 = calculo == 'data' ? dados1 : dados2
                 }
@@ -68,6 +83,7 @@ import { mapState, mapMutations } from 'vuex'
                 if((tamanho > 1 && el) && ((this.tipo && !temValorNegativo) || !this.tipo)){
                     let dados = [...this.dadosVisualizacao]
                     let titulo = this.tituloGrafico
+
                     if(this.tipo && !this.graficoPadrao){
                         dados = dados3
                         if(this.calculoGraficoSecundario == 'data') titulo = 'Total por data'
@@ -137,8 +153,8 @@ import { mapState, mapMutations } from 'vuex'
                         is3D: this.grafico3D,
                     }           
 
-                    let tipo = this.tipo ? this.tipo : this.tipoGrafico                  
-                    var chart = new google.visualization[tipo](el)
+                    let tipoGrafico = this.tipo ? this.tipo : this.tipoGrafico                  
+                    var chart = new google.visualization[tipoGrafico](el)
                     chart.draw(data, options)
 
                 } else {

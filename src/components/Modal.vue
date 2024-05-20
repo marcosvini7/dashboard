@@ -25,8 +25,8 @@
             <div class="mb-2" v-if="!graficoPadrao">
                 <label class="form-label" for="input-calculo">Cálculo do gráfico secundário</label>
                 <select class="form-select" id="input-calculo" v-model="input.calculo">
-                    <option value="data">Total por data</option>
                     <option value="tipo">Total por investidor/contrato</option>
+                    <option value="data">Total por data</option>                  
                 </select>
             </div> 
 
@@ -105,7 +105,7 @@ import { mapState, mapMutations } from 'vuex'
             ],
             input: {
                 tipoInvestidor: 'Total Geral',
-                calculo: 'data',
+                calculo: 'tipo',
                 graficoEmpilhado: false,
                 grafico3D: false
             }, 

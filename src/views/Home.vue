@@ -76,6 +76,10 @@
 
     }
 
+    .area-conteudo .row {
+      margin: 0
+    }
+
     .mg-navbar {
       margin-top: var(--navbar-mg-top);
     }
@@ -90,7 +94,6 @@
       top: var(--area-conteudo-top);
       left: var(--area-conteudo-left);
       width: var(--area-conteudo-width);
-      overflow-x: hidden;
     }
 
     .btn-offcanvas {

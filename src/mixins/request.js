@@ -45,14 +45,12 @@ export default {
             // Quando todas as requisições terminarem seus resultados ficarão nas variáveis res[o], res[1] ...
             axios.all(requests).then(axios.spread((...res) => {
                 let nomesContratos = res[0].data
-                let pi = res[1].data              
-                // Calcula o saldo e o inclui em todos os objetos do array               
-                for(let i = 0; i < pi.length; i++){
-                    pi[i].saldo = pi[i].compras - pi[i].vendas
-                }
+                let pi = res[1].data             
+
                 // Coloca todos os nomes de contratos em um array de strings
                 let nomes = []
                 nomesContratos.forEach(d => nomes.push(d.nome))
+
                 // Salva os dados no state do vuex
                 this.setDados({obj: 'participacaoInvestidores', data: pi})
                 this.setNavLateral({obj: 'contratos', data: nomes}) 

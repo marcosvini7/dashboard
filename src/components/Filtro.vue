@@ -13,7 +13,7 @@
     <div class="col-6 col-lg-2 mb-2 mb-lg-0">
         <label for="input-tipo" class="form-label">Tipo</label>
         <select id="input-tipo" class="form-select" v-model="input.tipo" @change="clicouBotao">
-            <option v-for="tipo, i in tipos" :key="i" :value="tipo.obj"> {{ tipo.label }} </option>       
+            <option v-for="tipo, i in tipos" :id="'option-' + tipo.obj"  :key="i" :value="tipo.obj"> {{ tipo.label }} </option>       
         </select>
     </div> 
 
@@ -74,18 +74,26 @@
                 data: '',
                 tipo: '',
                 visualizacao: ''                         
-            },
+            }
         }),
         computed: {
             ...mapState(['dados', 'request', 'visaoGeral', 'graficoPadrao', 'graficoEmpilhado']),
             tipos(){
                 if(this.$route.name == 'participacao-investidores'){
+                    let u = '(R$) Mi'
                     return [
-                        {obj: 'compras', label: 'Compras', unidade: '(R$) Mi'},
-                        {obj: 'vendas', label: 'Vendas', unidade: '(R$) Mi'},
+                        {obj: 'compras_periodo', label: 'Compras período', unidade: u},
+                        {obj: 'vendas_periodo', label: 'Vendas período', unidade: u},
+                        {obj: 'saldo_periodo', label: 'Saldo período', unidade: u},
+                        {obj: 'compras_dia', label: 'Compras dia', unidade: u},
+                        {obj: 'vendas_dia', label: 'Vendas dia', unidade: u},
+                        {obj: 'saldo_dia', label: 'Saldo dia', unidade: u},                       
                         {obj: 'participacao_compras', label: 'Participação compras', unidade: '%'},
-                        {obj: 'participacao_vendas', label: 'Participação vendas', unidade: '%'},
-                        {obj: 'saldo', label: 'Saldo', unidade: '(R$) Mi'}                   
+                        {obj: 'participacao_vendas', label: 'Participação vendas', unidade: '%'},  
+                        
+                        {obj: 'compras', label: 'Compras', unidade: u},
+                        {obj: 'vendas', label: 'Vendas', unidade: u},
+                        {obj: 'saldo', label: 'Saldo', unidade: u}
                     ]
                 }
                 if(this.$route.name == 'contratos'){
@@ -124,12 +132,10 @@
                     let data_fim = this.$route.query.data_fim ? this.$route.query.data_fim : 
                         this.moment().format('YYYY-MM-DD')
                     
-                    let tipo = this.$route.query.tipo ? this.$route.query.tipo : this.tipos[0].obj
-                    this.tipos.forEach(t => { if(t.obj == tipo) tipo = t })
                     let tipo_investidor = this.$route.query.tipo_investidor ? this.$route.query.tipo_investidor : 'Total Geral'
                     let visualizacao = this.$route.query.visualizacao ? this.$route.query.visualizacao : 'BarChart'
                     
-                    let dados = this.dados.participacaoInvestidores
+                    let dados = JSON.parse(JSON.stringify(this.dados.participacaoInvestidores))
                     let objFiltro = 'tipo_investidor'
                     let objData = 'data'
                     let visaoGeral = this.visaoGeral.participacaoInvestidores
@@ -177,7 +183,6 @@
                     let di = this.moment(data_inicio)
                     let df = this.moment(data_fim)
                     let formatoData = this.moment(data_inicio).format('YYYY') == this.moment(data_fim).format('YYYY') ? 'DD/MM' : 'DD/MM/YYYY'
-                    // let formatoData = 'DD/MM'
 
                     let graficosNaoPadrao = ['LineChart', 'Table']
                     if(this.graficoEmpilhado){
@@ -186,14 +191,22 @@
 
                     this.setGraficoPadrao(!graficosNaoPadrao.includes(visualizacao) || opcao != '')
 
-                    function ajustarValor(valor){
-                        let tipos = ['compras', 'vendas', 'saldo']
-                        if(tipos.indexOf(tipo.obj) != -1 ){
-                            return valor / 1000
-                        }
-                        return valor
+                    let tipo = this.$route.query.tipo ? this.$route.query.tipo : this.tipos[0].obj
+                    if(this.graficoPadrao && !opcao){
+                        if(tipo == 'compras_periodo') tipo = 'compras'
+                        if(tipo == 'vendas_periodo') tipo = 'vendas'
+                        if(tipo == 'saldo_periodo') tipo = 'saldo'
                     }
+                    this.tipos.forEach(t => { if(t.obj == tipo) tipo = t })
 
+                    if(rota == 'participacao-investidores'){
+                        if(opcao || (!opcao && !this.graficoPadrao)){
+                            dados = this.ajustarDados(di)
+                        } else {
+                            dados = this.ajustarDados(data)
+                        }
+                    }
+                    
                     if(opcao){
                         dados.forEach(d => {
                             let dt = this.moment(d[objData])
@@ -272,6 +285,9 @@
                     this.setDadosVisualizacao(dadosFiltrados) 
            
                     let titulo = tipo.label
+                    if(tipo.obj == 'compras_dia') titulo = 'Compras'
+                    if(tipo.obj == 'vendas_dia') titulo = 'Vendas'
+                    if(tipo.obj == 'saldo_dia') titulo = 'Saldo'
                     if(['participacao_compras', 'participacao_vendas', 'compra', 'venda'].includes(tipo.obj)){
                         titulo += ` (${tipo.unidade})`
                     } else if(!['compra_porcentagem', 'venda_porcentagem'].includes(tipo.obj)){
@@ -279,7 +295,7 @@
                     } 
 
                     if(opcao){
-                        titulo += ' de ' + opcao  + ' por data'
+                        titulo += ' de ' + opcao 
                     } else {
                         titulo += titulo1
                     }
@@ -299,10 +315,13 @@
                     let descr = 'Dados não encontrados para a data informada'
 
                     if(dadosValidos){                     
-                        if(opcao || !this.graficoPadrao) 
+                        if(opcao || !this.graficoPadrao) {
                             descr = `${titulo} entre ${data_inicio} e ${data_fim}`
-                        else 
-                            descr = `${titulo} do dia ${data.format('DD/MM/YYYY')}`
+                        } else if(['compras', 'vendas', 'saldo'].includes(tipo.obj)){
+                            descr = `${titulo} até o dia ${data.format('DD/MM/YYYY')}`
+                        } else {
+                            descr = `${titulo}, dia ${data.format('DD/MM/YYYY')}`
+                        }
                         this.setOcultarIcoGrafico(false) 
                     } else { 
                         this.setOcultarIcoGrafico(true)  
@@ -310,14 +329,92 @@
 
                     this.setDescrDados(descr)
                     this.setAttGrafico()
+
+                    function ajustarValor(valor){
+                        let tipos = ['compras', 'vendas', 'saldo', 'compras_periodo', 'vendas_periodo',
+                            'saldo_periodo', 'compras_dia', 'vendas_dia', 'saldo_dia'
+                        ]
+                        if(tipos.indexOf(tipo.obj) != -1){
+                            return valor / 1000
+                        }
+                        return valor
+                    }
                 }
             },          
+
+            ajustarDados(dt_inicio){
+                let pi = JSON.parse(JSON.stringify(this.dados.participacaoInvestidores))
+                let dt_inicial = pi[0].data
+                let mudou_mes = false
+                let primeira_dt_mes = ''
+                
+                for(let i = 0; i < pi.length; i++){  
+                    if(mudou_mes && primeira_dt_mes != pi[i].data){
+                        mudou_mes = false
+                    }     
+                                       
+                    if(this.moment(pi[i].data).isSameOrAfter(dt_inicio)){
+                        let dia1 = this.moment(pi[i].data).format('DD') == '01'
+                            && pi[i].data == dt_inicial
+
+                        if(pi[i].data != dt_inicial && !dia1){
+                            let f = i - 1
+                            while(pi[f].tipo_investidor != pi[i].tipo_investidor && f != -1){ f-- }
+
+                            if(mudou_mes){ 
+                                pi[i].compras_dia = pi[i].compras
+                                pi[i].vendas_dia = pi[i].vendas  
+                            } else {
+                                pi[i].compras_dia = pi[i].compras - pi[f].compras
+                                pi[i].vendas_dia = pi[i].vendas - pi[f].vendas
+                            }
+                            
+                            if(pi[f].compras_periodo){
+                                pi[i].compras_periodo = pi[f].compras_periodo + pi[i].compras_dia
+                                pi[i].vendas_periodo = pi[f].vendas_periodo + pi[i].vendas_dia  
+                            } else {
+                                pi[i].compras_periodo = pi[i].compras_dia
+                                pi[i].vendas_periodo = pi[i].vendas_dia
+                            }                                                     
+
+                            pi[i].saldo_periodo = pi[i].compras_periodo - pi[i].vendas_periodo
+                            pi[i].saldo_dia = pi[i].compras_dia - pi[i].vendas_dia
+                        } 
+                        if(pi[i].data == dt_inicial && dia1){
+                            pi[i].compras_periodo = pi[i].compras
+                            pi[i].vendas_periodo = pi[i].vendas
+                            pi[i].saldo_periodo = pi[i].compras - pi[i].vendas
+                            pi[i].compras_dia = pi[i].compras
+                            pi[i].vendas_dia = pi[i].vendas
+                            pi[i].saldo_dia = pi[i].compras - pi[i].vendas
+                        } 
+                    }
+                                                 
+                    if(i != pi.length - 1){
+                        if(this.moment(pi[i].data).format('MM') != this.moment(pi[i + 1].data).format('MM')){    
+                            mudou_mes = true     
+                            primeira_dt_mes = pi[i + 1].data                 
+                        }
+                    }     
+                    
+                    pi[i].saldo = pi[i].compras - pi[i].vendas
+                }
+
+                if(this.moment(dt_inicial).format('DD') != '01'){
+                    pi = pi.filter(p => p.data != dt_inicial)               
+                }
+                return pi
+            }
+
         },
         created(){            
             if(!this.request) this.filtrar()
         },
         mounted(){
-            
+            let tipos = ['compras', 'vendas', 'saldo']
+            for(let i = 0; i < tipos.length; i++){
+                document.getElementById('option-' + tipos[i]).style.display = 'none'
+            }
         },
         watch: {
             request(n){

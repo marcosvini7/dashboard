@@ -404,6 +404,16 @@
                     pi = pi.filter(p => p.data != dt_inicial)               
                 }
                 return pi
+            },
+            
+            ocultarOpcoes(){
+                let tipos = ['compras', 'vendas', 'saldo']
+                for(let i = 0; i < tipos.length; i++){
+                    let el = document.getElementById('option-' + tipos[i])
+                    if(el){
+                        el.style.display = 'none'
+                    }                  
+                }
             }
 
         },
@@ -411,10 +421,7 @@
             if(!this.request) this.filtrar()
         },
         mounted(){
-            let tipos = ['compras', 'vendas', 'saldo']
-            for(let i = 0; i < tipos.length; i++){
-                document.getElementById('option-' + tipos[i]).style.display = 'none'
-            }
+            this.ocultarOpcoes()
         },
         watch: {
             request(n){
@@ -430,6 +437,11 @@
                     this.setGraficoPadrao(true)
                 }
                 this.filtrar()
+            },
+            tipos(){
+                setTimeout(() => {
+                    this.ocultarOpcoes()
+                }, 100)
             },
             'visaoGeral.participacaoInvestidores'(){ this.filtrar() },
             'visaoGeral.contratos'(){ this.getContratos() }
